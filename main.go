@@ -9,6 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mohammadtauchid/golang-cache/v2/arc"
+    "github.com/mohammadtauchid/golang-cache/v2/marc"
+	// "github.com/mohammadtauchid/golang-cache/v2/lfu"
 	"github.com/mohammadtauchid/golang-cache/v2/lru"
 	"github.com/mohammadtauchid/golang-cache/v2/simulator"
 )
@@ -23,6 +26,7 @@ func main() {
         filePath    string
         outPath     string
         algorithm   string
+        algorithms  []string
         err         error
         cacheList   []int
     )
@@ -58,31 +62,54 @@ func main() {
         log.Fatalf("Error reading file: %v", err)
     }
 
-    outPath = fmt.Sprintf("%v_%v_%v.txt", time.Now().Unix(), algorithm, fs.Name())
+    outPath = fmt.Sprintf("%v_%v_%v.txt", time.Now().Unix(), strings.ToLower(algorithm), fs.Name())
 
-    out, err = os.Create(fmt.Sprintf("output/%v/%v", algorithm, outPath))
+    os.MkdirAll(fmt.Sprintf("output/%v", strings.ToLower(algorithm)), os.ModePerm)
+    out, err = os.Create(fmt.Sprintf("output/%v/%v", strings.ToLower(algorithm), outPath))
     if err != nil {
         log.Fatalf(err.Error())
     }
     defer out.Close()
 
-    for _, cache := range cacheList {
-        switch strings.ToLower(algorithm) {
-        case "lru":
-            simulator = lru.NewLru(cache)
-        }
-
-        timeStart = time.Now()
-
-        for _, trace := range traces {
-            err = simulator.Get(trace)
-            if err != nil {
-                log.Fatal(err.Error())
-            }
-        }
-
-        simulator.PrintToFile(out, timeStart)
+    if strings.ToLower(algorithm) == "compare" {
+        algorithms = append(algorithms, "lru", "arc", "marc")
+    } else {
+        algorithms = append(algorithms, algorithm)
     }
+
+    for _, algo := range algorithms {
+        fmt.Println(algo)
+        for _, cache := range cacheList {
+            switch strings.ToLower(algo) {
+            case "lru":
+                simulator = lru.NewLRU(cache)
+            // case "lfu":
+            //     simulator = lfu.NewLFU(cache)
+            case "arc":
+                simulator = arc.NewARC(cache)
+            case "marc":
+                simulator = marc.NewMARC(cache)
+            default:
+                log.Fatal("Algorithm not supported")
+            }
+    
+            timeStart = time.Now()
+    
+            for _, trace := range traces {
+                err = simulator.Get(trace)
+                if err != nil {
+                    log.Fatal(err.Error())
+                }
+            }
+    
+            out.WriteString(
+                fmt.Sprintf("======== Algorithm: %4v ========\n", strings.ToUpper(algo)),
+            )
+            simulator.PrintToFile(out, timeStart)   
+            out.WriteString("\n\n")
+        }
+    }
+
 
     fmt.Printf("Done")
 }
