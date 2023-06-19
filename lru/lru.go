@@ -25,7 +25,7 @@ type (
     }
 )
 
-func NewLru(value int) *LRU {
+func NewLRU(value int) *LRU {
     return &LRU{
         maxlen:         value,
         available:      value,
@@ -36,28 +36,12 @@ func NewLru(value int) *LRU {
 }
 
 func (lru *LRU) Put(data *Node) (exists bool) {
-    log, err := os.OpenFile("lru.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-    if err != nil {
-        fmt.Println("Error opening file:", err)
-        return
-    }
-    defer log.Close()
-
-    if _, _, ok := lru.list.GetLast(); !ok {
-        log.WriteString(time.Now().String() + " : LRU cache is empty\n")
-    }
 
     if _, ok := lru.list.Get(data.lba); ok {
         lru.hit++
 
         if ok := lru.list.MoveLast(data.lba); !ok {
-            log.WriteString(
-                fmt.Sprintf(
-                    "%s : Failed to move LBA %d to MRU position\n", 
-                    time.Now().String(), 
-                    data.lba,
-                ),
-            )
+            return
         }
         
         return true
