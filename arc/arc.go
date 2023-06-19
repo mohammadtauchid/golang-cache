@@ -67,13 +67,6 @@ func (arc *ARC) Replace(data *Node) (err error) {
 }
 
 func (arc *ARC) Put(data *Node) (exists bool) {
-    log, err := os.OpenFile("arc.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-    if err != nil {
-        fmt.Println("Error opening file:", err)
-        return
-    }
-    defer log.Close()
-
     // length of list
     t1size := arc.t1.Len()
     t2size := arc.t2.Len()
@@ -109,7 +102,6 @@ func (arc *ARC) Put(data *Node) (exists bool) {
         // call subroutine replace
         err := arc.Replace(data)
         if err != nil {
-            log.WriteString(time.Now().String() + " : Failed to replace cache")
             return false
         }
 
@@ -138,7 +130,6 @@ func (arc *ARC) Put(data *Node) (exists bool) {
         // call subroutine replace
         err := arc.Replace(data)
         if err != nil {
-            log.WriteString(time.Now().String() + " : Failed to replace cache")
             return false
         }
 
@@ -172,7 +163,6 @@ func (arc *ARC) Put(data *Node) (exists bool) {
             }
             err := arc.Replace(data)
             if err != nil {
-                log.WriteString(time.Now().String() + " : Failed to replace cache")
                 return false
             }
         }
