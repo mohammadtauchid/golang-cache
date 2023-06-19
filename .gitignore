@@ -1,0 +1,5 @@
+output/
+converter/
+resource/
+!converter/split_financial.nim
+!converter/split_websearch.nim
