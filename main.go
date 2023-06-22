@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/mohammadtauchid/golang-cache/v2/arc"
+    "github.com/mohammadtauchid/golang-cache/v2/larc"
     "github.com/mohammadtauchid/golang-cache/v2/marc"
 	// "github.com/mohammadtauchid/golang-cache/v2/lfu"
 	"github.com/mohammadtauchid/golang-cache/v2/lru"
@@ -36,9 +37,9 @@ func main() {
         fmt.Println("Example: ./main LRU resource/Financial 1000 2000 3000")
         fmt.Println("Available algorithms:")
         fmt.Println("LRU     : Least Recently Used")
-        fmt.Println("LFU     : Least Frequently Used")
+        // fmt.Println("LFU     : Least Frequently Used")
         fmt.Println("ARC     : Adaptive Replacement Cache")
-        fmt.Println("2Q      : Two Queues")
+        // fmt.Println("2Q      : Two Queues")
         fmt.Println("Compare : Compare all algorithms")
         os.Exit(1)
     }
@@ -72,7 +73,7 @@ func main() {
     defer out.Close()
 
     if strings.ToLower(algorithm) == "compare" {
-        algorithms = append(algorithms, "lru", "arc", "marc")
+        algorithms = append(algorithms, "lru", "arc", "larc", "marc")
     } else {
         algorithms = append(algorithms, algorithm)
     }
@@ -87,6 +88,8 @@ func main() {
             //     simulator = lfu.NewLFU(cache)
             case "arc":
                 simulator = arc.NewARC(cache)
+            case "larc":
+                simulator = larc.NewLARC(cache)
             case "marc":
                 simulator = marc.NewMARC(cache)
             default:
