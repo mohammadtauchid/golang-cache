@@ -20,6 +20,7 @@ type (
         available   int
         hit         int
         miss        int
+        wc          int
 
         list        *orderedmap.OrderedMap
     }
@@ -31,6 +32,7 @@ func NewLRU(value int) *LRU {
         available:      value,
         hit:            0,
         miss:           0,
+        wc:             0,
         list:           orderedmap.NewOrderedMap(),
     }
 }
@@ -47,6 +49,7 @@ func (lru *LRU) Put(data *Node) (exists bool) {
         return true
     } else {
         lru.miss++
+        lru.wc++
 
         if lru.available > 0 {
             lru.available--
@@ -74,6 +77,7 @@ func (lru *LRU) PrintToFile(file *os.File, start time.Time) (err error) {
     file.WriteString(fmt.Sprintf("cache hit: %d\n", lru.hit))
     file.WriteString(fmt.Sprintf("cache miss: %d\n", lru.miss))
     file.WriteString(fmt.Sprintf("cache hit ratio: %.4f%%\n", float64(lru.hit) / float64(lru.hit + lru.miss) * 100))
+    file.WriteString(fmt.Sprintf("write count: %d\n", lru.wc))
     file.WriteString(fmt.Sprintf("time execution: %8.4f\n", time.Since(start).Seconds()))
 
     return nil

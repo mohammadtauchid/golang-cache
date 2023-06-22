@@ -21,6 +21,7 @@ type (
         hit         int
         miss        int
         p           int // p is the number of pages in T1; adaptation parameter
+        wc          int
 
         t1          *orderedmap.OrderedMap
         t2          *orderedmap.OrderedMap
@@ -36,6 +37,7 @@ func NewARC(value int) *ARC {
         hit:            0,
         miss:           0,
         p:              0,
+        wc:             0,
         t1:             orderedmap.NewOrderedMap(),
         t2:             orderedmap.NewOrderedMap(),
         b1:             orderedmap.NewOrderedMap(),
@@ -84,6 +86,8 @@ func (arc *ARC) Put(data *Node) (exists bool) {
         arc.hit++
         return true
     }
+
+    arc.wc++
 
     // second case: data is in B1
     if _, ok := arc.b1.Get(data.lba); ok {
@@ -188,6 +192,7 @@ func (arc *ARC) PrintToFile(file *os.File, start time.Time) (err error) {
     file.WriteString(fmt.Sprintf("cache hit: %d\n", arc.hit))
     file.WriteString(fmt.Sprintf("cache miss: %d\n", arc.miss))
     file.WriteString(fmt.Sprintf("cache hit ratio: %.4f%%\n", float64(arc.hit) / float64(arc.hit + arc.miss) * 100))
+    file.WriteString(fmt.Sprintf("write count: %d\n", arc.wc))
     file.WriteString(fmt.Sprintf("time execution: %8.4f\n", time.Since(start).Seconds()))
 
     return nil

@@ -23,6 +23,7 @@ type (
         hit         int
         miss        int
         p           int // p is the number of pages in T1; adaptation parameter
+        wc          int
 
         state        string // state is the current state of the cache
         hitState     int // hrState is the hit rate of the current state
@@ -47,6 +48,7 @@ func NewMARC(value int) *mARC {
         hit:            0,
         miss:           0,
         p:              0,
+        wc:             0,
         state:          "unstable",
         hitState:       0,
         hitSample:      0,
@@ -149,13 +151,6 @@ func (marc *mARC) Replace(data *Node) (err error) {
 }
 
 func (marc *mARC) Put(data *Node) (exists bool) {
-    // log, err := os.OpenFile("marc.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-    // if err != nil {
-    //     fmt.Println("Error opening file:", err)
-    //     return
-    // }
-    // defer log.Close()
-
     // length of list
     t1size := marc.t1.Len()
     t2size := marc.t2.Len()
@@ -223,6 +218,8 @@ func (marc *mARC) Put(data *Node) (exists bool) {
         }
     }
 
+    marc.wc++
+
     // second case: data is in B1
     if _, ok := marc.b1.Get(data.lba); ok {
         // adaptation
@@ -240,7 +237,6 @@ func (marc *mARC) Put(data *Node) (exists bool) {
         // call subroutine replace
         err := marc.Replace(data)
         if err != nil {
-            // log.WriteString(time.Now().String() + " : Failed to replace cache")
             return false
         }
 
@@ -269,7 +265,6 @@ func (marc *mARC) Put(data *Node) (exists bool) {
         // call subroutine replace
         err := marc.Replace(data)
         if err != nil {
-            // log.WriteString(time.Now().String() + " : Failed to replace cache")
             return false
         }
 
@@ -303,7 +298,6 @@ func (marc *mARC) Put(data *Node) (exists bool) {
             }
             err := marc.Replace(data)
             if err != nil {
-                // log.WriteString(time.Now().String() + " : Failed to replace cache")
                 return false
             }
         }
@@ -323,7 +317,7 @@ func (marc *mARC) Get(trace simulator.Trace) (err error) {
 
     // state changer
     if marc.counter % marc.maxlen == 0 && marc.counter != 0 {
-        fmt.Println(marc.state)
+        // fmt.Println(marc.state)
         if marc.counter >= marc.maxlen * 2 {
             if marc.StateChange() {
                 marc.counter = 0
@@ -343,6 +337,7 @@ func (marc *mARC) PrintToFile(file *os.File, start time.Time) (err error) {
     file.WriteString(fmt.Sprintf("cache hit: %d\n", marc.hit))
     file.WriteString(fmt.Sprintf("cache miss: %d\n", marc.miss))
     file.WriteString(fmt.Sprintf("cache hit ratio: %.4f%%\n", float64(marc.hit) / float64(marc.hit + marc.miss) * 100))
+    file.WriteString(fmt.Sprintf("cache write count: %d\n", marc.wc))
     file.WriteString(fmt.Sprintf("time execution: %8.4f\n", time.Since(start).Seconds()))
 
     return nil
